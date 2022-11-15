@@ -1,0 +1,47 @@
+.memberPage {
+	height: 100%;
+	margin-top: 9em;
+	font-size: 14px;
+}
+
+.memberPage .card-wrapper {
+	width: 450px;
+}
+
+.memberPage .card {
+	border-color: transparent;
+}
+
+.memberPage .card.fat {
+	padding: 2em 4em;
+}
+
+.memberPage .form-control {
+	border-width: 2.3px;
+}
+
+.memberPage .form-group {
+	margin: 0.8em auto;
+}
+
+.memberPage .form-group label {
+	font-weight: 900;
+	width: 100%;
+}
+
+#optional {
+	display: none;
+}
+
+table {
+    background: white;
+}
+
+tbody tr {
+    cursor: pointer;
+}
+
+.form-check {
+	margin-right: 0;
+	margin-left: -1.5em;
+}

@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.QuizMapper">
+
+	<!-- =================== select ====================== -->
+	<select id="getBunchesByCri" resultType="BunchVO">
+		<![CDATA[
+			SELECT *
+			FROM bunch
+		]]>
+		<where>
+			<!-- type는 criteria의 gettype로 꺼낸 값, ${} 사용안함 -->
+			<if test="type == 'title'.toString()">
+				<!-- #{keyword} 값 자체가 이미 ''로 씌어져 있음. sql의 concat 함수 이용 -->
+				title LIKE CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="type == 'memberId'.toString()">
+				member_id LIKE CONCAT('%', #{keyword}, '%')
+			</if>
+		</where>
+		<![CDATA[
+			ORDER BY num DESC
+			LIMIT #{startRow} , #{amount}
+		]]>
+	</select>
+	
+	<select id="getBunchesAndQuizListByCri" resultMap="bunchesAndQuizList">
+		<![CDATA[
+			SELECT b.num, b.title, b.member_id, b.reg_date, q.bunch_num, q.question_num, 
+				   q.question, q.num_one, q.num_two, q.num_three, q.num_four, q.answer
+			FROM bunch b
+			LEFT OUTER JOIN quiz q
+			ON b.num = q.bunch_num
+		]]>
+		<where>
+			<!-- type는 criteria의 gettype로 꺼낸 값, ${} 사용안함 -->
+			<if test="type == 'title'.toString()">
+				<!-- #{keyword} 값 자체가 이미 ''로 씌어져 있음. sql의 concat 함수 이용 -->
+				title LIKE CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="type == 'memberId'.toString()">
+				member_id LIKE CONCAT('%', #{keyword}, '%')
+			</if>
+		</where>
+		<![CDATA[
+			ORDER BY num DESC
+			LIMIT #{startRow} , #{amount}
+		]]>
+	</select>
+	<resultMap type="bunchVO" id="bunchesAndQuizList">
+		<id column="num" property="num" />
+		<result column="title" property="title" />
+		<result column="member_id" property="memberId" />
+		<result column="reg_date" property="regDate" />
+		<collection property="quizList" javaType="list"
+			ofType="quizVO">
+			<id column="bunch_num" property="bunchNum" />
+			<id column="question_num" property="questionNum" />
+			<result column="question" property="question" />
+			<result column="num_one" property="numOne" />
+			<result column="num_two" property="numTwo" />
+			<result column="num_three" property="numThree" />
+			<result column="num_four" property="numFour" />
+			<result column="answer" property="answer" />
+		</collection>
+	</resultMap>
+	
+	<select id="getBunchCountBySearch" resultType="int">
+		<![CDATA[
+			SELECT COUNT(*)
+			FROM bunch
+		]]>
+		<where>
+			<if test="type == 'title'.toString()">
+				title LIKE CONCAT('%',#{keyword},'%')
+			</if>
+			<if test="type == 'memberId'.toString()">
+				member_id LIKE CONCAT('%',#{keyword},'%')
+			</if>
+		</where>
+	</select>
+
+	<select id="getNextBunchNum" resultType="int">
+		<![CDATA[
+			SELECT IFNULL(MAX(num),0) + 1 AS nextnum 
+			FROM bunch
+		]]>
+	</select>
+
+	<select id="getNextSolveHistoryNum" resultType="int">
+		<![CDATA[
+			SELECT IFNULL(MAX(num),0) + 1 AS nextnum 
+			FROM solve_history
+		]]>
+	</select>
+
+	<select id="getBunchAndQuizList" resultMap="bunchAndQuizList">
+		<![CDATA[
+			SELECT b.num, b.title, b.member_id, b.reg_date, q.bunch_num, q.question_num, 
+				   q.question, q.num_one, q.num_two, q.num_three, q.num_four, q.answer
+			FROM bunch b
+			LEFT OUTER JOIN quiz q
+			ON b.num = q.bunch_num
+			WHERE b.num = #{bunchNum}
+		]]>
+	</select>
+	<resultMap type="bunchVO" id="bunchAndQuizList">
+		<id column="num" property="num" />
+		<result column="title" property="title" />
+		<result column="member_id" property="memberId" />
+		<result column="reg_date" property="regDate" />
+		<collection property="quizList" javaType="list"
+			ofType="quizVO">
+			<id column="bunch_num" property="bunchNum" />
+			<id column="question_num" property="questionNum" />
+			<result column="question" property="question" />
+			<result column="num_one" property="numOne" />
+			<result column="num_two" property="numTwo" />
+			<result column="num_three" property="numThree" />
+			<result column="num_four" property="numFour" />
+			<result column="answer" property="answer" />
+		</collection>
+	</resultMap>
+
+	<select id="getAnswerListByBunchNum" resultType="String">
+		<![CDATA[
+			SELECT answer
+			FROM quiz
+			WHERE bunch_num = #{bunchNum}
+			ORDER BY bunch_num, question_num
+		]]>
+	</select>
+
+	<select id="getSolveHistoryByNum" resultType="solveHistoryVO">
+		<![CDATA[
+			SELECT *
+			FROM solve_history
+			WHERE num = #{num}
+		]]>
+	</select>
+
+	<select id="getQuizListByResult" resultType="quizVO" parameterType="java.util.HashMap">
+		<![CDATA[
+			SELECT *
+			FROM quiz
+			WHERE bunch_num = #{bunchNum}
+		]]>
+		<choose>
+			<when test="questionlist.size != 0">
+				AND question_num IN
+				<foreach collection="questionlist" item="questionNum" open="(" separator="," close=")">
+					#{questionNum}
+				</foreach>
+			</when>
+			<otherwise>
+				AND bunch_num = -9999
+			</otherwise>
+		</choose>
+		<![CDATA[
+			ORDER BY question_num ASC;
+		]]>
+	</select>
+	
+	<select id="getBunchesById" resultType="bunchVO">
+		<![CDATA[
+			SELECT *
+			FROM bunch
+			WHERE member_id = #{id}
+		]]>
+			<if test="cri.type == 'title'.toString()">
+				AND title LIKE CONCAT('%', #{cri.keyword}, '%')
+			</if>
+			<if test="cri.type == 'memberId'.toString()">
+				AND member_id LIKE CONCAT('%', #{cri.keyword}, '%')
+			</if>
+			<![CDATA[
+				ORDER BY reg_date DESC
+				LIMIT #{cri.startRow}, #{cri.amount}
+			]]>
+				
+		
+	</select>
+	
+	<select id="getCountBunchesById" resultType="int">
+		<![CDATA[
+			SELECT COUNT(*)
+			FROM bunch
+			WHERE member_id = #{id}
+		]]>
+	</select>
+	
+	<select id="getSolveHistoryAndBunch" resultMap="solveHistoryAndBunch">
+		<![CDATA[
+			SELECT s.num, s.member_id, s.bunch_num, s.solve_date, s.point, s.answer_list, s.correct_list, s.incorrect_list,
+			b.num, b.title, b.member_id, b.reg_date
+			FROM solve_history s
+			JOIN bunch b
+			ON s.bunch_num = b.num
+			WHERE s.member_id = #{id}
+			]]>
+			<if test="cri.type == 'title'.toString()">
+				AND title LIKE CONCAT('%', #{cri.keyword}, '%')
+			</if>
+			<if test="cri.type == 'memberId'.toString()">
+				AND member_id LIKE CONCAT('%', #{cri.keyword}, '%')
+			</if>
+			<![CDATA[
+				ORDER BY s.solve_date DESC
+				LIMIT #{cri.startRow}, #{cri.amount}
+			]]>
+			
+	</select>
+	
+	<resultMap type="solveHistoryVO" id="solveHistoryAndBunch">
+		<id column="num" property="num"/>
+		<result column="member_id" property="memberId"/>
+		<result column="bunch_num" property="bunchNum"/>
+		<result column="solve_date" property="solveDate"/>
+		<result column="point" property="point"/>
+		<result column="answer_list" property="answerList"/>
+		<result column="correct_list" property="correctList"/>
+		<result column="incorrect_list" property="incorrectList"/>
+		<association property="bunchVO" javaType="bunchVO">
+			<id column="num" property="num"/>
+			<result column="title" property="title"/>
+			<result column="member_id" property="memberId"/>
+			<result column="reg_date" property="regDate"/>
+		</association>
+	</resultMap>
+
+	<select id="getCountSolveHistory" resultType="int">
+		<![CDATA[
+			SELECT COUNT(*)
+			FROM solve_history
+			WHERE member_id = #{id}
+		]]>
+	</select>
+
+
+	<!-- =================== insert ====================== -->
+	<insert id="addBunch">
+		<![CDATA[
+			INSERT INTO bunch (num, title, quiz_count, member_id, reg_date)
+			VALUES (#{num}, #{title}, #{quizCount}, #{memberId}, #{regDate})
+		]]>
+	</insert>
+
+	<insert id="addQuizList">
+		<![CDATA[
+			INSERT INTO quiz (bunch_num, question_num, question, num_one, num_two, num_three, num_four, answer)
+			VALUES 
+		]]>
+		<foreach collection="list" item="quiz" separator=",">
+			(#{quiz.bunchNum}, #{quiz.questionNum}, #{quiz.question},
+			#{quiz.numOne},
+			#{quiz.numTwo}, #{quiz.numThree}, #{quiz.numFour},
+			#{quiz.answer})
+		</foreach>
+	</insert>
+
+	<insert id="insertSolveHistory">
+		<![CDATA[
+			INSERT INTO solve_history (num, member_id, bunch_num, solve_date, point, answer_list, correct_list, incorrect_list)
+			VALUES (#{num}, #{memberId}, #{bunchNum}, #{solveDate}, #{point}, #{answerList}, #{correctList}, #{incorrectList})
+		]]>
+	</insert>
+	
+	
+	<!-- =================== delete ====================== -->
+	<delete id="deleteQuizList">
+		<![CDATA[
+			DELETE FROM quiz
+			WHERE bunch_num = #{bunchNum}
+		]]>
+	</delete>
+	
+	<delete id="deleteBunch">
+		<![CDATA[
+			DELETE FROM bunch
+			WHERE num = #{num}
+		]]>
+	</delete>
+
+
+</mapper>

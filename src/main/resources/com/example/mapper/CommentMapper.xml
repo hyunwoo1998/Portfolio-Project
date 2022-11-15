@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.CommentMapper">
+
+	<!-- =================== select ====================== -->
+	<select id="getNextNum" resultType="int">
+	<![CDATA[
+		SELECT IFNULL(max(num),0) + 1 AS next_num
+		FROM comment
+	]]>
+	</select>
+	
+	<select id="getCommentsByBoardNum" resultType="commentVO">
+	<![CDATA[
+		SELECT *
+		FROM comment
+		WHERE board_num = #{ boardNum }
+		ORDER BY re_ref ASC, re_seq ASC
+	]]>
+	</select>
+	
+	<select id="getMyCommentListByCri" resultType="commentVO">
+	<![CDATA[
+		SELECT *
+		FROM comment
+		WHERE member_id = #{id}
+	]]>	
+		<if test="cri.type == 'content'.toString()">
+			AND content LIKE CONCAT('%', #{cri.keyword}, '%')
+		</if>
+	<![CDATA[
+		ORDER BY re_ref DESC, re_seq ASC
+		LIMIT #{cri.startRow}, #{cri.amount}
+	]]>
+	</select>
+	
+	<select id="getMyAllCommentsCount" resultType="int">
+	<![CDATA[
+		SELECT COUNT(*)
+		FROM comment
+		WHERE member_id = #{id}
+	]]>	
+		<if test="cri.type == 'content'.toString()">
+			AND content LIKE CONCAT('%', #{cri.keyword}, '%')
+		</if>
+	</select>
+	
+	<!-- =================== insert ====================== -->
+	<insert id="insertComment">
+	<![CDATA[
+		INSERT INTO comment(num, board_num, member_id, content, reg_date, re_ref, re_lev, re_seq)
+		VALUES (#{num}, #{boardNum}, #{memberId}, #{content}, #{regDate}, #{reRef}, #{reLev}, #{reSeq})
+	]]>
+	</insert>
+	
+	<!-- =================== update ====================== -->
+	<update id="updateComment">
+	<![CDATA[
+		UPDATE comment
+		SET content = #{content}
+		WHERE num = #{num}
+	]]>
+	</update>
+	
+	<update id="updateCommentReSeq">
+	<![CDATA[
+		UPDATE comment
+		SET re_seq = re_seq + 1
+		WHERE re_ref = #{reRef}
+		AND re_seq >= #{reSeq}
+	]]>
+	</update>
+	
+	<!-- =================== delete ====================== -->
+	<delete id="deleteCommentByNum">
+	<![CDATA[
+		DELETE FROM comment
+		WHERE num = #{num}
+	]]>
+	</delete>
+
+</mapper>
